@@ -1,0 +1,1 @@
+the mchpcdc.inf file has been modified for Midas and pid of 0xf9c3 added.
