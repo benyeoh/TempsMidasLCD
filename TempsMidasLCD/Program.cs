@@ -51,7 +51,7 @@ namespace TempsMidasLCD
         {
             Exception e = (Exception)args.ExceptionObject;
             Console.WriteLine(e.Message.ToString());
-            MessageBox.Show(e.Message.ToString(), "Temp Midas LCD Error");
+            MessageBox.Show(e.Message.ToString(), "Temp Midas LCD");
         }
 
         public void Start()
@@ -144,6 +144,11 @@ namespace TempsMidasLCD
                 App app = new App();
                 app.Start();
                 Application.Run(app);
+            }
+            else
+            {
+                Console.WriteLine("An instance is already running. Close that first.");
+                MessageBox.Show("An instance is already running. Close that first.", "Temp Midas LCD");
             }
         }
     }
