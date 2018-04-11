@@ -1,3 +1,6 @@
 [submodule "openhardwaremonitor"]
 	path = openhardwaremonitor
 	url = https://github.com/benyeoh/openhardwaremonitor.git
+[submodule "Windows/openhardwaremonitor"]
+	path = Windows/openhardwaremonitor
+	url = https://github.com/benyeoh/openhardwaremonitor.git
