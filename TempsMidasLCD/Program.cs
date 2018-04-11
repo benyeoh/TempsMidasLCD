@@ -128,7 +128,10 @@ namespace TempsMidasLCD
             var principal = new WindowsPrincipal(identity);
             if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
             {
-                Console.WriteLine("*** WARNING: Need to 'Run As Administrator' for this to properly work. ***\n");
+                string msg = "Please 'Run As Administrator' for sensors to properly function.";
+                Console.WriteLine(msg);
+                MessageBox.Show(msg, "Temp Midas LCD");
+
             }
 
             // Check if already running
