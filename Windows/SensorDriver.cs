@@ -37,19 +37,6 @@ namespace TempsMidasLCD
         
         public SensorDriver()
         {
-            /*
-            // check if the OpenHardwareMonitorLib assembly has the correct version
-            if (Assembly.GetAssembly(typeof(Computer)).GetName().Version != 
-                Assembly.GetExecutingAssembly().GetName().Version)
-            {
-                string expected = Assembly.GetAssembly(typeof(Computer)).GetName().ToString();
-                string actual = Assembly.GetExecutingAssembly().GetName().ToString();
-                MessageBox.Show(
-                  $"The version of the file OpenHardwareMonitorLib.dll is incompatible.\n{expected}\n{actual}",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Environment.Exit(0);
-            }*/
-
             this.computer = new Computer(null);
 
             int p = (int)Environment.OSVersion.Platform;
@@ -67,8 +54,6 @@ namespace TempsMidasLCD
 
             computer.CPUEnabled = true;
             computer.GPUEnabled = true;
-
-            computer.Open();
             
             // Make sure the settings are saved when the user logs off
             Microsoft.Win32.SystemEvents.SessionEnded += delegate {
@@ -119,10 +104,15 @@ namespace TempsMidasLCD
             }));
         }
 
-        public void Reset()
+        public void Open()
         {
             computer.Close();
             computer.Open();
+        }
+
+        public void Close()
+        {
+            computer.Close();
         }
     }
 }

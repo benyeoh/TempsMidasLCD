@@ -21,22 +21,7 @@ namespace TempsMidasLCD
 
         public MidasLCDDriver()
         {
-            string MIDAS_VID = "04D8";
-            string MIDAS_PID = "F9C3";
-            List<string> comports = ComPortNames(MIDAS_VID, MIDAS_PID);
-
-            if (comports.Count == 0)
-            {
-                throw new System.IO.IOException("Cannot find COM port for Midas LCD. Is it plugged in?");
-            }
-
-            serialPort.BaudRate = 9600;
-            serialPort.PortName = comports[0];
-            serialPort.Open();
-
-            this.CmdReset();
-            this.CmdEnable2x16();
-            this.WriteText("Hello!");
+            
         }
 
         private void Write(byte[] buffer, int pauseTime=100)
@@ -104,6 +89,31 @@ namespace TempsMidasLCD
             this.CmdReset();
             this.WriteText("Goodbye!");
             serialPort.Close();
+        }
+
+        public void Open()
+        {
+            if (serialPort.IsOpen)
+            {
+                serialPort.Close();
+            }
+
+            string MIDAS_VID = "04D8";
+            string MIDAS_PID = "F9C3";
+            List<string> comports = ComPortNames(MIDAS_VID, MIDAS_PID);
+
+            if (comports.Count == 0)
+            {
+                throw new InvalidOperationException("Cannot find COM port for Midas LCD. Is it plugged in?");
+            }
+
+            serialPort.BaudRate = 9600;
+            serialPort.PortName = comports[0];
+            serialPort.Open();
+
+            this.CmdReset();
+            this.CmdEnable2x16();
+            this.WriteText("Hello!");
         }
 
         public void ClearText()

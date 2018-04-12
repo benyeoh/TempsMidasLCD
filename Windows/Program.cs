@@ -7,6 +7,7 @@ using System.Threading;
 using System.Security.Principal;
 
 using OpenHardwareMonitor.Hardware;
+using System.IO;
 
 namespace TempsMidasLCD
 {
@@ -54,62 +55,84 @@ namespace TempsMidasLCD
             MessageBox.Show(e.Message.ToString(), "Temp Midas LCD");
         }
 
+        private void UpdateLoop()
+        {
+            is_running = true;
+
+            Thread.CurrentThread.IsBackground = true;
+
+            sendorDriver = new SensorDriver();
+            midasDriver = new MidasLCDDriver();
+
+            while (true)
+            {
+                try
+                {
+                    Console.WriteLine("Initializing MidasLCD Driver ...");
+                    midasDriver.Open();
+
+                    Console.WriteLine("Initializing Sensors ...");
+                    midasDriver.WriteText("Initializing    Sensors ...");
+                    sendorDriver.Open();
+                    
+                    midasDriver.ClearText();
+                    Console.WriteLine("Done!");
+
+                    // Update sensors and drive LCD
+                    while (!is_exiting)
+                    {
+                        float temps_cpu_cur = 0.0f;
+                        float temps_cpu_max = 0.0f;
+                        float temps_gpu_cur = 0.0f;
+                        float temps_gpu_max = 0.0f;
+
+                        sendorDriver.Update();
+                        foreach (ISensor sensor in sendorDriver.GetSensors())
+                        {
+                            if (sensor.SensorType == SensorType.Temperature)
+                            {
+                                if (sensor.Name.Equals("CPU Package"))
+                                {
+                                    temps_cpu_cur = (float)(sensor.Value ?? 0.0f);
+                                    temps_cpu_max = (float)(sensor.Max ?? 0.0f);
+                                }
+                                else if (sensor.Name.Equals("GPU Core"))
+                                {
+                                    temps_gpu_cur = (float)(sensor.Value ?? 0.0f);
+                                    temps_gpu_max = (float)(sensor.Max ?? 0.0f);
+                                }
+                            }
+                        }
+
+                        string cpu_temps_text = String.Format("CPU {0}C / {1}C", (int)temps_cpu_cur, (int)temps_cpu_max);
+                        cpu_temps_text = cpu_temps_text.PadRight(16).Substring(0, 16);
+                        string gpu_temps_text = String.Format("GPU {0}C / {1}C", (int)temps_gpu_cur, (int)temps_gpu_max);
+                        gpu_temps_text = gpu_temps_text.PadRight(16).Substring(0, 16);
+
+                        midasDriver.WriteText(cpu_temps_text + gpu_temps_text);
+                        Thread.Sleep(2000);
+                    }
+
+                    Console.WriteLine("Exiting");
+                    midasDriver.Close();
+                    sendorDriver.Close();
+                    break;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Console.WriteLine(ex.Message.ToString());
+                    Thread.Sleep(2000);
+                }
+            }
+
+            is_running = false;
+        }
+
         public void Start()
         {
             new Thread(() =>
             {
-                is_running = true;
-
-                Thread.CurrentThread.IsBackground = true;
-
-                Console.WriteLine("Initializing MidasLCD Driver...");
-                midasDriver = new MidasLCDDriver();
-
-                midasDriver.WriteText("Initializing    Sensors ...");
-                Console.WriteLine("Initializing Sensor Driver...");
-                sendorDriver = new SensorDriver();
-                midasDriver.ClearText();
-                Console.WriteLine("Done!");
-
-                // Update sensors and drive LCD
-                while (!is_exiting)
-                {
-                    float temps_cpu_cur = 0.0f;
-                    float temps_cpu_max = 0.0f;
-                    float temps_gpu_cur = 0.0f;
-                    float temps_gpu_max = 0.0f;
-
-                    sendorDriver.Update();
-                    foreach (ISensor sensor in sendorDriver.GetSensors())
-                    {
-                        if (sensor.SensorType == SensorType.Temperature)
-                        {
-                            if (sensor.Name.Equals("CPU Package"))
-                            {
-                                temps_cpu_cur = (float)(sensor.Value ?? 0.0f);
-                                temps_cpu_max = (float)(sensor.Max ?? 0.0f);
-                            }
-                            else if (sensor.Name.Equals("GPU Core"))
-                            {
-                                temps_gpu_cur = (float)(sensor.Value ?? 0.0f);
-                                temps_gpu_max = (float)(sensor.Max ?? 0.0f);
-                            }
-                        }
-                    }
-
-                    string cpu_temps_text = String.Format("CPU {0}C {1}C", temps_cpu_cur.ToString("f1"), temps_cpu_max.ToString("f1"));
-                    cpu_temps_text = cpu_temps_text.PadRight(16).Substring(0, 16);
-                    string gpu_temps_text = String.Format("GPU {0}C {1}C", temps_gpu_cur.ToString("f1"), temps_gpu_max.ToString("f1"));
-                    gpu_temps_text = gpu_temps_text.PadRight(16).Substring(0, 16);
-
-                    midasDriver.WriteText(cpu_temps_text + gpu_temps_text);
-                    Thread.Sleep(5000);
-                }
-
-                Console.WriteLine("Exiting");
-                midasDriver.Close();
-
-                is_running = false;
+                this.UpdateLoop();
             }).Start();
 
         }
